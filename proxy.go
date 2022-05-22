@@ -1,6 +1,8 @@
 package main
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -16,6 +18,15 @@ import (
 var filter *bloom.BloomFilter = bloom.NewWithEstimates(1000000, 0.01)
 var serverAddress string = os.Getenv("PISEC_BRAIN_ADDR")
 var indicatorsEndpoint string = "/api/v1/indicators"
+var detailsEndpoint string = "/api/v1/indicators/details"
+
+type CheckUrlRequest struct {
+	Url string `json:"url"`
+}
+
+type CheckUrlResponse struct {
+	Result bool `json:"exists"`
+}
 
 func main() {
 
@@ -54,11 +65,41 @@ func GetPiSecPage2(r *http.Request, client net.Conn, ctx *goproxy.ProxyCtx) (*ht
 		"Blocked By PiSec with <3 !")
 }
 
+func CheckUrlWithBrain(url string) bool {
+	checkUrlTest := CheckUrlRequest{
+		Url: "evil.com",
+	}
+	var checkUrlBuf bytes.Buffer
+	err := json.NewEncoder(&checkUrlBuf).Encode(checkUrlTest)
+	if err != nil {
+		panic(err)
+	}
+
+	endpoint := serverAddress + detailsEndpoint
+	res, err := http.Post(endpoint, "application/json", &checkUrlBuf)
+	if err != nil {
+		panic(err)
+	}
+
+	defer res.Body.Close()
+	jsonRes, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		panic(err)
+	}
+
+	filter.UnmarshalJSON(jsonRes)
+
+	var checkUrlRes CheckUrlResponse
+	json.Unmarshal(jsonRes, &checkUrlRes)
+	return checkUrlRes.Result
+}
+
 func IsMalwareRequestHttp() goproxy.ReqConditionFunc {
 	return func(req *http.Request, ctx *goproxy.ProxyCtx) bool {
 		fmt.Println("checking...")
 		fmt.Println(req.Host)
-		return filter.TestString(strings.Split(req.Host, ":")[0])
+		url := strings.Split(req.Host, ":")[0]
+		return filter.TestString(url) && CheckUrlWithBrain(url)
 	}
 }
 
