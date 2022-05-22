@@ -1,6 +1,8 @@
 package main
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -16,6 +18,15 @@ import (
 var filter *bloom.BloomFilter = bloom.NewWithEstimates(1000000, 0.01)
 var serverAddress string = os.Getenv("PISEC_BRAIN_ADDR")
 var indicatorsEndpoint string = "/api/v1/indicators"
+var detailsEndpoint string = "/api/v1/indicators/details"
+
+type CheckUrlRequest struct {
+	Url string `json:"url"`
+}
+
+type CheckUrlResponse struct {
+	Result bool `json:"exists"`
+}
 
 func main() {
 
@@ -32,7 +43,10 @@ func main() {
 		panic(err)
 	}
 
-	filter.UnmarshalJSON(jsonRes)
+	err = filter.UnmarshalJSON(jsonRes)
+	if err != nil {
+		panic(err)
+	}
 
 	proxy := goproxy.NewProxyHttpServer()
 	proxy.OnRequest(IsMalwareRequestHttp()).DoFunc(GetPiSecPage)
@@ -54,19 +68,68 @@ func GetPiSecPage2(r *http.Request, client net.Conn, ctx *goproxy.ProxyCtx) (*ht
 		"Blocked By PiSec with <3 !")
 }
 
+func CheckUrlWithBrain(url string) (bool, error) {
+	checkUrlTest := CheckUrlRequest{
+		Url: url,
+	}
+	var checkUrlBuf bytes.Buffer
+	err := json.NewEncoder(&checkUrlBuf).Encode(checkUrlTest)
+	if err != nil {
+		return false, err
+	}
+
+	endpoint := serverAddress + detailsEndpoint
+	res, err := http.Post(endpoint, "application/json", &checkUrlBuf)
+	if err != nil {
+		return false, err
+	}
+
+	defer res.Body.Close()
+	jsonRes, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return false, err
+	}
+
+	var checkUrlRes CheckUrlResponse
+	err = json.Unmarshal(jsonRes, &checkUrlRes)
+	if err != nil {
+		return false, err
+	}
+
+	return checkUrlRes.Result, nil
+}
+
+func checkUrl(url string) (bool, error) {
+	fmt.Println("checking...")
+	fmt.Println(url)
+	cleanUrl := strings.Split(url, ":")[0]
+
+	if filter.TestString(cleanUrl) {
+		return CheckUrlWithBrain(cleanUrl)
+	}
+
+	return false, nil
+}
+
 func IsMalwareRequestHttp() goproxy.ReqConditionFunc {
 	return func(req *http.Request, ctx *goproxy.ProxyCtx) bool {
-		fmt.Println("checking...")
-		fmt.Println(req.Host)
-		return filter.TestString(strings.Split(req.Host, ":")[0])
+		fmt.Println("Inside HTTP")
+		res, err := checkUrl(strings.Split(req.Host, ":")[0])
+		if err != nil {
+			log.Fatal(err)
+		}
+		return res
 	}
 }
 
 func IsMalwareRequestHttps() goproxy.ReqConditionFunc {
 	return func(req *http.Request, ctx *goproxy.ProxyCtx) bool {
-		fmt.Println("checking...")
-		fmt.Println(req.Host)
-		return filter.TestString(strings.Split(req.Host, ":")[0])
+		fmt.Println("Inside HTTPS")
+		res, err := checkUrl(strings.Split(req.Host, ":")[0])
+		if err != nil {
+			log.Fatal(err)
+		}
+		return res
 	}
 }
 
