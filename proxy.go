@@ -98,7 +98,11 @@ func checkUrl(url string) bool {
 	fmt.Println("checking...")
 	fmt.Println(url)
 	cleanUrl := strings.Split(url, ":")[0]
-	return filter.TestString(cleanUrl) && CheckUrlWithBrain(cleanUrl)
+	if filter.TestString(cleanUrl) {
+		return CheckUrlWithBrain(cleanUrl)
+	} else {
+		return false
+	}
 }
 
 func IsMalwareRequestHttp() goproxy.ReqConditionFunc {
