@@ -87,8 +87,6 @@ func CheckUrlWithBrain(url string) bool {
 		panic(err)
 	}
 
-	filter.UnmarshalJSON(jsonRes)
-
 	var checkUrlRes CheckUrlResponse
 	json.Unmarshal(jsonRes, &checkUrlRes)
 	return checkUrlRes.Result
