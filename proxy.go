@@ -43,7 +43,10 @@ func main() {
 		panic(err)
 	}
 
-	filter.UnmarshalJSON(jsonRes)
+	err = filter.UnmarshalJSON(jsonRes)
+	if err != nil {
+		panic(err)
+	}
 
 	proxy := goproxy.NewProxyHttpServer()
 	proxy.OnRequest(IsMalwareRequestHttp()).DoFunc(GetPiSecPage)
@@ -88,7 +91,11 @@ func CheckUrlWithBrain(url string) (bool, error) {
 	}
 
 	var checkUrlRes CheckUrlResponse
-	json.Unmarshal(jsonRes, &checkUrlRes)
+	err = json.Unmarshal(jsonRes, &checkUrlRes)
+	if err != nil {
+		return false, err
+	}
+
 	return checkUrlRes.Result, nil
 }
 
@@ -96,11 +103,12 @@ func checkUrl(url string) (bool, error) {
 	fmt.Println("checking...")
 	fmt.Println(url)
 	cleanUrl := strings.Split(url, ":")[0]
+
 	if filter.TestString(cleanUrl) {
 		return CheckUrlWithBrain(cleanUrl)
-	} else {
-		return false, nil
 	}
+
+	return false, nil
 }
 
 func IsMalwareRequestHttp() goproxy.ReqConditionFunc {
