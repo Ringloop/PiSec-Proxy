@@ -11,6 +11,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/Ringloop/pisec-proxy/cache"
 	"github.com/bits-and-blooms/bloom/v3"
 	"github.com/elazarl/goproxy"
 )
@@ -28,7 +29,12 @@ type CheckUrlResponse struct {
 	Result bool `json:"exists"`
 }
 
+var repo cache.RedisRepository
+
 func main() {
+
+	//setup the REDIS cache
+	repo = cache.NewRedisClient()
 
 	//download the bloom filter from server
 	endpoint := serverAddress + indicatorsEndpoint
@@ -113,6 +119,22 @@ func youShallPass(url string) (bool, error) {
 	fmt.Println("checking...")
 	fmt.Println(url)
 	cleanUrl := strings.Split(url, ":")[0]
+
+	if !filter.TestString(cleanUrl) {
+		return true, nil
+	}
+
+	if repo.isAllow(cleanUrl) {
+		return true, nil
+	}
+
+	if repo.IsFalsePositive(cleanUrl) {
+		return true, nil
+	}
+
+	if repo.IsDeny(cleanUrl) {
+		return false, nil
+	}
 
 	if filter.TestString(cleanUrl) {
 		return CheckUrlWithBrain(cleanUrl)
