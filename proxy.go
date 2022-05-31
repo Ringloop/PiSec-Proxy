@@ -74,24 +74,21 @@ func GetPiSecPage2(r *http.Request, client net.Conn, ctx *goproxy.ProxyCtx) (*ht
 		"Blocked By PiSec with <3 !")
 }
 
-func CheckUrlWithBrain(url string) (bool, error) {
-
-	checkUrlTest := CheckUrlRequest{
+func getCheckUrlReq(url string, buf *bytes.Buffer) error {
+	rq := CheckUrlRequest{
 		Url: url,
 	}
-	var checkUrlBuf bytes.Buffer
-	err := json.NewEncoder(&checkUrlBuf).Encode(checkUrlTest)
-	if err != nil {
-		return false, err
-	}
+	err := json.NewEncoder(buf).Encode(rq)
+	return err
+}
 
+func getCheckUrlRes(buf *bytes.Buffer) (bool, error) {
 	endpoint := serverAddress + detailsEndpoint
-	res, err := http.Post(endpoint, "application/json", &checkUrlBuf)
+	res, err := http.Post(endpoint, "application/json", buf)
 	if err != nil {
 		return false, err
 	}
 
-	defer res.Body.Close()
 	jsonRes, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		return false, err
@@ -99,12 +96,29 @@ func CheckUrlWithBrain(url string) (bool, error) {
 
 	var checkUrlRes CheckUrlResponse
 	err = json.Unmarshal(jsonRes, &checkUrlRes)
+
 	if err != nil {
 		return false, err
 	}
 
-	//Based on the search result, update the cache
-	if checkUrlRes.Result {
+	return checkUrlRes.Result, nil
+
+}
+
+func CheckUrlWithBrain(url string) (bool, error) {
+
+	var buf bytes.Buffer
+	err := getCheckUrlReq(url, &buf)
+	if err != nil {
+		return false, err
+	}
+
+	isUrlInRepo, err := getCheckUrlRes(&buf)
+	if err != nil {
+		return false, err
+	}
+
+	if isUrlInRepo {
 		repo.AddDeny(url)
 		return true, nil
 	} else {
