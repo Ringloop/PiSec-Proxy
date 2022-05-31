@@ -75,6 +75,7 @@ func GetPiSecPage2(r *http.Request, client net.Conn, ctx *goproxy.ProxyCtx) (*ht
 }
 
 func CheckUrlWithBrain(url string) (bool, error) {
+
 	checkUrlTest := CheckUrlRequest{
 		Url: url,
 	}
@@ -102,7 +103,15 @@ func CheckUrlWithBrain(url string) (bool, error) {
 		return false, err
 	}
 
-	return checkUrlRes.Result, nil
+	//Based on the search result, update the cache
+	if checkUrlRes.Result {
+		repo.AddDeny(url)
+		return true, nil
+	} else {
+		repo.AddFalsePositive(url)
+		return false, nil
+	}
+
 }
 
 /*
@@ -136,11 +145,8 @@ func youShallPass(url string) (bool, error) {
 		return false, nil
 	}
 
-	if filter.TestString(cleanUrl) {
-		return CheckUrlWithBrain(cleanUrl)
-	}
+	return CheckUrlWithBrain(cleanUrl)
 
-	return false, nil
 }
 
 func IsMalwareRequestHttp() goproxy.ReqConditionFunc {
