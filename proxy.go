@@ -99,7 +99,17 @@ func CheckUrlWithBrain(url string) (bool, error) {
 	return checkUrlRes.Result, nil
 }
 
-func checkUrl(url string) (bool, error) {
+/*
+This function says if the navigation to the passed URL is allowed or not.
+Cases are as following (order is important)
+  - Url is NOT found in the Bloom Filter: return TRUE because the URL is not in the repository, for sure.
+  	All the other cases requires that the URL has been found in the Bloom Filter
+  - URL is in ALLOW cache: return TRUE because the URL is a malicious one, but the user has already allowed the navigation through this
+  - URL is in FALSE cache: return TRUE because the URL is a false positive of the Bloom Filter, already checked
+  - URL is in DENY cache: return FALSE because the URL is a malicious one, and it has been already checked with server and blocked
+  - Outcome is dubious, so we need to check this result with Brain server, cache will be updated accordingly
+*/
+func youShallPass(url string) (bool, error) {
 	fmt.Println("checking...")
 	fmt.Println(url)
 	cleanUrl := strings.Split(url, ":")[0]
@@ -114,7 +124,7 @@ func checkUrl(url string) (bool, error) {
 func IsMalwareRequestHttp() goproxy.ReqConditionFunc {
 	return func(req *http.Request, ctx *goproxy.ProxyCtx) bool {
 		fmt.Println("Inside HTTP")
-		res, err := checkUrl(strings.Split(req.Host, ":")[0])
+		res, err := youShallPass(strings.Split(req.Host, ":")[0])
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -125,7 +135,7 @@ func IsMalwareRequestHttp() goproxy.ReqConditionFunc {
 func IsMalwareRequestHttps() goproxy.ReqConditionFunc {
 	return func(req *http.Request, ctx *goproxy.ProxyCtx) bool {
 		fmt.Println("Inside HTTPS")
-		res, err := checkUrl(strings.Split(req.Host, ":")[0])
+		res, err := youShallPass(strings.Split(req.Host, ":")[0])
 		if err != nil {
 			log.Fatal(err)
 		}
