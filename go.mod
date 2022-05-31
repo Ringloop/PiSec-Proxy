@@ -1,4 +1,4 @@
-module github.com/Ringloop/pisec-proxy
+module github.com/Ringloop/pisec
 
 go 1.18
 

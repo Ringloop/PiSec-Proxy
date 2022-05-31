@@ -11,7 +11,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/Ringloop/pisec-proxy/cache"
+	"github.com/Ringloop/pisec/cache"
 	"github.com/bits-and-blooms/bloom/v3"
 	"github.com/elazarl/goproxy"
 )
