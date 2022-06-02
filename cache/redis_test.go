@@ -51,7 +51,7 @@ func TestRedisInsertAllow(t *testing.T) {
 	err := repo.AddAllow("ALLOW_EXAMPLE")
 	require.Nil(t, err)
 
-	res, err := repo.isAllow("ALLOW_EXAMPLE")
+	res, err := repo.IsAllow("ALLOW_EXAMPLE")
 	require.Nil(t, err)
 
 	//then

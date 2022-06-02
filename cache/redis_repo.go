@@ -43,7 +43,7 @@ func (repo *RedisRepository) AddFalsePositive(url string) error {
 	return repo.client.Set(FALSE_POSITIVE_KEY+url, url, time.Duration(repo.dataDuration)).Err()
 }
 
-func (repo *RedisRepository) isAllow(url string) (bool, error) {
+func (repo *RedisRepository) IsAllow(url string) (bool, error) {
 	res, err := repo.client.Get(ALLOW_KEY + url).Result()
 	if err != nil && err.Error() != "redis: nil" {
 		return false, err

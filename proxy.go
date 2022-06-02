@@ -29,7 +29,7 @@ type CheckUrlResponse struct {
 	Result bool `json:"exists"`
 }
 
-var repo cache.RedisRepository
+var repo *cache.RedisRepository
 
 func main() {
 
@@ -74,7 +74,7 @@ func GetPiSecPage2(r *http.Request, client net.Conn, ctx *goproxy.ProxyCtx) (*ht
 		"Blocked By PiSec with <3 !")
 }
 
-func getCheckUrlReq(url string, buf *bytes.Buffer) error {
+func createCheckUrlReq(url string, buf *bytes.Buffer) error {
 	rq := CheckUrlRequest{
 		Url: url,
 	}
@@ -82,7 +82,7 @@ func getCheckUrlReq(url string, buf *bytes.Buffer) error {
 	return err
 }
 
-func getCheckUrlRes(buf *bytes.Buffer) (bool, error) {
+func isUrlInBrainRepo(buf *bytes.Buffer) (bool, error) {
 	endpoint := serverAddress + detailsEndpoint
 	res, err := http.Post(endpoint, "application/json", buf)
 	if err != nil {
@@ -107,13 +107,13 @@ func getCheckUrlRes(buf *bytes.Buffer) (bool, error) {
 
 func CheckUrlWithBrain(url string) (bool, error) {
 
-	var buf bytes.Buffer
-	err := getCheckUrlReq(url, &buf)
+	var checkUrlReq bytes.Buffer
+	err := createCheckUrlReq(url, &checkUrlReq)
 	if err != nil {
 		return false, err
 	}
 
-	isUrlInRepo, err := getCheckUrlRes(&buf)
+	isUrlInRepo, err := isUrlInBrainRepo(&checkUrlReq)
 	if err != nil {
 		return false, err
 	}
@@ -138,7 +138,7 @@ Cases are as following (order is important)
   - URL is in DENY cache: return FALSE because the URL is a malicious one, and it has been already checked with server and blocked
   - Outcome is dubious, so we need to check this result with Brain server, cache will be updated accordingly
 */
-func youShallPass(url string) (bool, error) {
+func shallYouPass(url string) (bool, error) {
 	fmt.Println("checking...")
 	fmt.Println(url)
 	cleanUrl := strings.Split(url, ":")[0]
@@ -147,18 +147,29 @@ func youShallPass(url string) (bool, error) {
 		return true, nil
 	}
 
-	if repo.isAllow(cleanUrl) {
-		return true, nil
+	if allow, err := repo.IsAllow(cleanUrl); err != nil {
+		if allow {
+			return true, nil
+		}
+	} else {
+		return false, err
 	}
 
-	if repo.IsFalsePositive(cleanUrl) {
-		return true, nil
+	if falsePositive, err := repo.IsFalsePositive(cleanUrl); err != nil {
+		if falsePositive {
+			return true, nil
+		}
+	} else {
+		return false, err
 	}
 
-	if repo.IsDeny(cleanUrl) {
-		return false, nil
+	if deny, err := repo.IsDeny(cleanUrl); err != nil {
+		if deny {
+			return false, nil
+		}
+	} else {
+		return false, err
 	}
-
 	return CheckUrlWithBrain(cleanUrl)
 
 }
@@ -166,7 +177,7 @@ func youShallPass(url string) (bool, error) {
 func IsMalwareRequestHttp() goproxy.ReqConditionFunc {
 	return func(req *http.Request, ctx *goproxy.ProxyCtx) bool {
 		fmt.Println("Inside HTTP")
-		res, err := youShallPass(strings.Split(req.Host, ":")[0])
+		res, err := shallYouPass(strings.Split(req.Host, ":")[0])
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -177,7 +188,7 @@ func IsMalwareRequestHttp() goproxy.ReqConditionFunc {
 func IsMalwareRequestHttps() goproxy.ReqConditionFunc {
 	return func(req *http.Request, ctx *goproxy.ProxyCtx) bool {
 		fmt.Println("Inside HTTPS")
-		res, err := youShallPass(strings.Split(req.Host, ":")[0])
+		res, err := shallYouPass(strings.Split(req.Host, ":")[0])
 		if err != nil {
 			log.Fatal(err)
 		}
