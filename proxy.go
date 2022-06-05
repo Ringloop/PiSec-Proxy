@@ -144,30 +144,30 @@ func shallYouPass(url string) (bool, error) {
 	cleanUrl := strings.Split(url, ":")[0]
 
 	if !filter.TestString(cleanUrl) {
-		return true, nil
+		return true, nil //URL is NOT present, for sure
 	}
 
-	if allow, err := repo.IsAllow(cleanUrl); err != nil {
+	if allow, err := repo.IsAllow(cleanUrl); err == nil {
 		if allow {
-			return true, nil
+			return true, nil //URL is allowed
 		}
-	} else {
+	} else { //err != nil
 		return false, err
 	}
 
-	if falsePositive, err := repo.IsFalsePositive(cleanUrl); err != nil {
+	if falsePositive, err := repo.IsFalsePositive(cleanUrl); err == nil {
 		if falsePositive {
-			return true, nil
+			return true, nil //URL is a well known FALSE POSITIVE
 		}
-	} else {
+	} else { //err != nil
 		return false, err
 	}
 
-	if deny, err := repo.IsDeny(cleanUrl); err != nil {
+	if deny, err := repo.IsDeny(cleanUrl); err == nil {
 		if deny {
-			return false, nil
+			return false, nil //URL is a well known POSITIVE
 		}
-	} else {
+	} else { //err != nil
 		return false, err
 	}
 	return CheckUrlWithBrain(cleanUrl)
