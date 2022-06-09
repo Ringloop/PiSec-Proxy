@@ -1,4 +1,4 @@
-package url_filter
+package filter
 
 import (
 	"bytes"
