@@ -5,23 +5,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"os"
 	"strings"
 
 	"github.com/Ringloop/pisec/cache"
 	"github.com/bits-and-blooms/bloom/v3"
-	"github.com/elazarl/goproxy"
 )
-
-type CheckUrlRequest struct {
-	Url string `json:"url"`
-}
-
-type CheckUrlResponse struct {
-	Result bool `json:"exists"`
-}
 
 type PisecUrlFilter struct {
 	brainEndpoint string
@@ -66,60 +56,6 @@ func downloadBloomFilter(indicatorsEndpoint string) *bloom.BloomFilter {
 	return filter
 }
 
-func createCheckUrlReq(url string, buf *bytes.Buffer) error {
-	rq := CheckUrlRequest{
-		Url: url,
-	}
-	err := json.NewEncoder(buf).Encode(rq)
-	return err
-}
-
-func (psFilter *PisecUrlFilter) isUrlInBrainRepo(buf *bytes.Buffer) (bool, error) {
-	endpoint := psFilter.brainEndpoint + detailsEndpoint
-	res, err := http.Post(endpoint, "application/json", buf)
-	if err != nil {
-		return false, err
-	}
-
-	jsonRes, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		return false, err
-	}
-
-	var checkUrlRes CheckUrlResponse
-	err = json.Unmarshal(jsonRes, &checkUrlRes)
-
-	if err != nil {
-		return false, err
-	}
-
-	return checkUrlRes.Result, nil
-
-}
-
-func (psFilter *PisecUrlFilter) checkUrlWithBrain(url string) (bool, error) {
-
-	var checkUrlReq bytes.Buffer
-	err := createCheckUrlReq(url, &checkUrlReq)
-	if err != nil {
-		return false, err
-	}
-
-	isUrlInRepo, err := psFilter.isUrlInBrainRepo(&checkUrlReq)
-	if err != nil {
-		return false, err
-	}
-
-	if isUrlInRepo {
-		psFilter.repo.AddDeny(url)
-		return true, nil
-	} else {
-		psFilter.repo.AddFalsePositive(url)
-		return false, nil
-	}
-
-}
-
 /*
 This function says if the navigation to the passed URL is allowed or not.
 Cases are as following (order is important)
@@ -130,7 +66,7 @@ Cases are as following (order is important)
   - URL is in DENY cache: return FALSE because the URL is a malicious one, and it has been already checked with server and blocked
   - Outcome is dubious, so we need to check this result with Brain server, cache will be updated accordingly
 */
-func (psFilter *PisecUrlFilter) shallYouPass(url string) (bool, error) {
+func (psFilter *PisecUrlFilter) ShallYouPass(url string) (bool, error) {
 	fmt.Println("checking...")
 	fmt.Println(url)
 	cleanUrl := strings.Split(url, ":")[0]
@@ -166,29 +102,48 @@ func (psFilter *PisecUrlFilter) shallYouPass(url string) (bool, error) {
 
 }
 
-var IsConnectToMalware goproxy.FuncHttpsHandler = func(host string, ctx *goproxy.ProxyCtx) (*goproxy.ConnectAction, string) {
-	fmt.Println("connecting...")
-	return goproxy.MitmConnect, host
+func (psFilter *PisecUrlFilter) isUrlInBrainRepo(buf *bytes.Buffer) (bool, error) {
+	endpoint := psFilter.brainEndpoint + detailsEndpoint
+	res, err := http.Post(endpoint, "application/json", buf)
+	if err != nil {
+		return false, err
+	}
+
+	jsonRes, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return false, err
+	}
+
+	var checkUrlRes CheckUrlResponse
+	err = json.Unmarshal(jsonRes, &checkUrlRes)
+
+	if err != nil {
+		return false, err
+	}
+
+	return checkUrlRes.Result, nil
+
 }
 
-func (psFilter *PisecUrlFilter) IsMalwareRequestHttp() goproxy.ReqConditionFunc {
-	return func(req *http.Request, ctx *goproxy.ProxyCtx) bool {
-		fmt.Println("Inside HTTP")
-		res, err := psFilter.shallYouPass(strings.Split(req.Host, ":")[0])
-		if err != nil {
-			log.Fatal(err)
-		}
-		return res
-	}
-}
+func (psFilter *PisecUrlFilter) checkUrlWithBrain(url string) (bool, error) {
 
-func (psFilter *PisecUrlFilter) IsMalwareRequestHttps() goproxy.ReqConditionFunc {
-	return func(req *http.Request, ctx *goproxy.ProxyCtx) bool {
-		fmt.Println("Inside HTTPS")
-		res, err := psFilter.shallYouPass(strings.Split(req.Host, ":")[0])
-		if err != nil {
-			log.Fatal(err)
-		}
-		return res
+	var checkUrlReq bytes.Buffer
+	err := CreateCheckUrlReq(url, &checkUrlReq)
+	if err != nil {
+		return false, err
 	}
+
+	isUrlInRepo, err := psFilter.isUrlInBrainRepo(&checkUrlReq)
+	if err != nil {
+		return false, err
+	}
+
+	if isUrlInRepo {
+		psFilter.repo.AddDeny(url)
+		return true, nil
+	} else {
+		psFilter.repo.AddFalsePositive(url)
+		return false, nil
+	}
+
 }
