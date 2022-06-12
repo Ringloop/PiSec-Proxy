@@ -12,6 +12,7 @@ import (
 
 var urlFilter *filter.PisecUrlFilter
 var repo *cache.RedisRepository
+var urlHandler *handler.PisecHandler
 
 func main() {
 
@@ -21,9 +22,11 @@ func main() {
 	//setup the filter
 	urlFilter = filter.NewPisecUrlFilter(repo)
 
+	urlHandler = handler.NewUrlHandler(urlFilter)
+
 	proxy := goproxy.NewProxyHttpServer()
-	proxy.OnRequest(handler.IsMalwareRequestHttp()).DoFunc(handler.GetPiSecPage)
-	proxy.OnRequest(handler.IsMalwareRequestHttps()).HandleConnect(goproxy.AlwaysReject)
+	proxy.OnRequest(urlHandler.IsMalwareRequestHttp()).DoFunc(handler.GetPiSecPage)
+	proxy.OnRequest(urlHandler.IsMalwareRequestHttps()).HandleConnect(goproxy.AlwaysReject)
 	proxy.Verbose = true
 
 	log.Fatal(http.ListenAndServe(":8880", proxy))

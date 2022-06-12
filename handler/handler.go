@@ -10,6 +10,15 @@ import (
 	"github.com/elazarl/goproxy"
 )
 
+type PisecHandler struct {
+	urlFilter *filter.PisecUrlFilter
+}
+
+func NewUrlHandler(urlFilter *filter.PisecUrlFilter) *PisecHandler {
+	return &PisecHandler{
+		urlFilter: urlFilter}
+}
+
 func GetPiSecPage(r *http.Request, ctx *goproxy.ProxyCtx) (*http.Request, *http.Response) {
 	return r, goproxy.NewResponse(r,
 		goproxy.ContentTypeText, http.StatusForbidden,
@@ -21,10 +30,10 @@ var IsConnectToMalware goproxy.FuncHttpsHandler = func(host string, ctx *goproxy
 	return goproxy.MitmConnect, host
 }
 
-func IsMalwareRequestHttp() goproxy.ReqConditionFunc {
+func (handler *PisecHandler) IsMalwareRequestHttp() goproxy.ReqConditionFunc {
 	return func(req *http.Request, ctx *goproxy.ProxyCtx) bool {
 		fmt.Println("Inside HTTP")
-		res, err := filter.ShallYouPass(strings.Split(req.Host, ":")[0])
+		res, err := handler.urlFilter.ShallYouPass(strings.Split(req.Host, ":")[0])
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -32,10 +41,10 @@ func IsMalwareRequestHttp() goproxy.ReqConditionFunc {
 	}
 }
 
-func IsMalwareRequestHttps() goproxy.ReqConditionFunc {
+func (handler *PisecHandler) IsMalwareRequestHttps() goproxy.ReqConditionFunc {
 	return func(req *http.Request, ctx *goproxy.ProxyCtx) bool {
 		fmt.Println("Inside HTTPS")
-		res, err := filter.ShallYouPass(strings.Split(req.Host, ":")[0])
+		res, err := handler.urlFilter.ShallYouPass(strings.Split(req.Host, ":")[0])
 		if err != nil {
 			log.Fatal(err)
 		}
