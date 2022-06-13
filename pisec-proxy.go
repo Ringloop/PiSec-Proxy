@@ -5,12 +5,10 @@ import (
 	"net/http"
 
 	"github.com/Ringloop/pisec/cache"
-	"github.com/Ringloop/pisec/filter"
 	"github.com/Ringloop/pisec/handler"
 	"github.com/elazarl/goproxy"
 )
 
-var urlFilter *filter.PisecUrlFilter
 var repo *cache.RedisRepository
 var urlHandler *handler.PisecHandler
 
@@ -20,9 +18,7 @@ func main() {
 	repo = cache.NewRedisClient()
 
 	//setup the filter
-	urlFilter = filter.NewPisecUrlFilter(repo)
-
-	urlHandler = handler.NewUrlHandler(urlFilter)
+	urlHandler = handler.NewUrlHandler(repo)
 
 	proxy := goproxy.NewProxyHttpServer()
 	proxy.OnRequest(urlHandler.IsMalwareRequestHttp()).DoFunc(handler.GetPiSecPage)

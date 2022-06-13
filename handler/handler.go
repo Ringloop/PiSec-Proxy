@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/Ringloop/pisec/cache"
 	"github.com/Ringloop/pisec/filter"
 	"github.com/elazarl/goproxy"
 )
@@ -14,9 +15,11 @@ type PisecHandler struct {
 	urlFilter *filter.PisecUrlFilter
 }
 
-func NewUrlHandler(urlFilter *filter.PisecUrlFilter) *PisecHandler {
-	return &PisecHandler{
-		urlFilter: urlFilter}
+func NewUrlHandler(repo *cache.RedisRepository) *PisecHandler {
+
+	urlFilter := filter.NewPisecUrlFilter(repo)
+
+	return &PisecHandler{urlFilter: urlFilter}
 }
 
 func GetPiSecPage(r *http.Request, ctx *goproxy.ProxyCtx) (*http.Request, *http.Response) {
