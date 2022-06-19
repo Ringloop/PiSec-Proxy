@@ -50,7 +50,7 @@ func downloadBloomFilter(indicatorsEndpoint string) *bloom.BloomFilter {
 func NewUrlHandler(repo *cache.RedisRepository, server *Server) *PisecHandler {
 
 	bloomFilter := downloadBloomFilter(server.BaseAddress + server.IndicatorsEndpoint)
-	urlFilter := filter.NewPisecUrlFilter(repo, bloomFilter, server.DetailsEndpoint)
+	urlFilter := filter.NewPisecUrlFilter(repo, bloomFilter, server.BaseAddress+server.IndicatorsEndpoint)
 
 	return &PisecHandler{urlFilter: urlFilter}
 }
