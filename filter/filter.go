@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"os"
 	"strings"
 
 	"github.com/Ringloop/pisec/cache"
@@ -14,46 +13,19 @@ import (
 )
 
 type PisecUrlFilter struct {
-	brainEndpoint string
-	repo          *cache.RedisRepository
-	bloomFilter   *bloom.BloomFilter
+	brainEndpoint   string
+	repo            *cache.RedisRepository
+	bloomFilter     *bloom.BloomFilter
+	detailsEndpoint string
 }
 
-var brainAddress string = os.Getenv("PISEC_BRAIN_ADDR")
-var detailsEndpoint string = "/api/v1/indicators/details"
-var indicatorsEndpoint string = "/api/v1/indicators"
-
-func NewPisecUrlFilter(repo *cache.RedisRepository) *PisecUrlFilter {
+func NewPisecUrlFilter(repo *cache.RedisRepository, bloomFilter *bloom.BloomFilter, detailsEndpoint string) *PisecUrlFilter {
 
 	return &PisecUrlFilter{
-		brainEndpoint: brainAddress,
-		repo:          repo,
-		bloomFilter:   downloadBloomFilter(brainAddress + indicatorsEndpoint),
+		repo:            repo,
+		bloomFilter:     bloomFilter,
+		detailsEndpoint: detailsEndpoint,
 	}
-}
-
-func downloadBloomFilter(indicatorsEndpoint string) *bloom.BloomFilter {
-
-	var filter *bloom.BloomFilter = bloom.NewWithEstimates(1000000, 0.01)
-
-	//download the bloom filter from server
-	res, err := http.Get(indicatorsEndpoint)
-	if err != nil {
-		panic(err)
-	}
-
-	defer res.Body.Close()
-	jsonRes, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		panic(err)
-	}
-
-	err = filter.UnmarshalJSON(jsonRes)
-	if err != nil {
-		panic(err)
-	}
-
-	return filter
 }
 
 /*
@@ -103,8 +75,7 @@ func (psFilter *PisecUrlFilter) ShallYouPass(url string) (bool, error) {
 }
 
 func (psFilter *PisecUrlFilter) isUrlInBrainRepo(buf *bytes.Buffer) (bool, error) {
-	endpoint := psFilter.brainEndpoint + detailsEndpoint
-	res, err := http.Post(endpoint, "application/json", buf)
+	res, err := http.Post(psFilter.detailsEndpoint, "application/json", buf)
 	if err != nil {
 		return false, err
 	}
