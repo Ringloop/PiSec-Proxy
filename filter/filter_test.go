@@ -20,10 +20,12 @@ func TestUrlInBloomFilter(t *testing.T) {
 
 	phishUrl := "newPhishingUrl.com"
 
+	filter := NewPisecUrlFilter()
+	//TO BE COMPLETED, we should create a mock BrainClient and use this for our tests...
+
+	//This is wrong, bloom filter should be returned by the Mock Client
 	var bloomFilter *bloom.BloomFilter = bloom.NewWithEstimates(1000000, 0.01)
 	bloomFilter.AddString(phishUrl)
-
-	filter := NewPisecUrlFilter(repo, bloomFilter, indicatorsEndpoint)
 
 	//when
 	res, err := filter.ShallYouPass(phishUrl)

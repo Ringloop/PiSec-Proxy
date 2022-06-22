@@ -2,14 +2,13 @@ package handler
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"strings"
 
+	"github.com/Ringloop/pisec/brainclient"
 	"github.com/Ringloop/pisec/cache"
 	"github.com/Ringloop/pisec/filter"
-	"github.com/bits-and-blooms/bloom/v3"
 	"github.com/elazarl/goproxy"
 )
 
@@ -23,34 +22,15 @@ type Server struct {
 	DetailsEndpoint    string
 }
 
-func downloadBloomFilter(indicatorsEndpoint string) *bloom.BloomFilter {
-
-	var filter *bloom.BloomFilter = bloom.NewWithEstimates(1000000, 0.01)
-
-	//download the bloom filter from server
-	res, err := http.Get(indicatorsEndpoint)
-	if err != nil {
-		panic(err)
-	}
-
-	defer res.Body.Close()
-	jsonRes, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		panic(err)
-	}
-
-	err = filter.UnmarshalJSON(jsonRes)
-	if err != nil {
-		panic(err)
-	}
-
-	return filter
-}
-
 func NewUrlHandler(repo *cache.RedisRepository, server *Server) *PisecHandler {
 
-	bloomFilter := downloadBloomFilter(server.BaseAddress + server.IndicatorsEndpoint)
-	urlFilter := filter.NewPisecUrlFilter(repo, bloomFilter, server.BaseAddress+server.IndicatorsEndpoint)
+	brainClient := brainclient.NewClient(server.BaseAddress, server.IndicatorsEndpoint, server.DetailsEndpoint)
+	bloomFilter := brainClient.DownloadBloomFilter()
+
+	urlFilter := filter.NewPisecUrlFilter()
+	urlFilter.Repo = repo
+	urlFilter.BloomFilter = bloomFilter
+	urlFilter.Client = brainClient
 
 	return &PisecHandler{urlFilter: urlFilter}
 }
