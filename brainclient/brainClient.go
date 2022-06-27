@@ -11,7 +11,7 @@ import (
 
 type BrainClient interface {
 	CheckUrl(url string) (bool, error)
-	DownloadBloomFilter()
+	DownloadBloomFilter() *bloom.BloomFilter
 }
 
 type Client struct {

@@ -19,6 +19,10 @@ func NewPisecUrlFilter() *PisecUrlFilter {
 	return &PisecUrlFilter{}
 }
 
+func CheckUrl(client brainclient.BrainClient, url string) (bool, error) {
+	return client.CheckUrl(url)
+}
+
 /*
 This function says if the navigation to the passed URL is allowed or not.
 Cases are as following (order is important)
@@ -61,6 +65,6 @@ func (psFilter *PisecUrlFilter) ShallYouPass(url string) (bool, error) {
 	} else { //err != nil
 		return false, err
 	}
-	return psFilter.Client.CheckUrl(cleanUrl)
+	return CheckUrl(psFilter.Client, url)
 
 }
