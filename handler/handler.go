@@ -30,13 +30,8 @@ func GetBloomFilter(client brainclient.BrainClient) *bloom.BloomFilter {
 func NewUrlHandler(repo *cache.RedisRepository, server *Server) *PisecHandler {
 
 	brainClient := brainclient.NewClient(server.BaseAddress, server.IndicatorsEndpoint, server.DetailsEndpoint)
-	bloomFilter := GetBloomFilter(brainClient)
 
-	urlFilter := filter.NewPisecUrlFilter()
-	urlFilter.Repo = repo
-	urlFilter.BloomFilter = bloomFilter
-	urlFilter.Client = brainClient
-
+	urlFilter := filter.NewPisecUrlFilter(brainClient, repo)
 	return &PisecHandler{urlFilter: urlFilter}
 }
 

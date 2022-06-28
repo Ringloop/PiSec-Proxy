@@ -10,17 +10,18 @@ import (
 )
 
 type PisecUrlFilter struct {
-	Client      *brainclient.Client
+	Client      brainclient.BrainClient
 	Repo        *cache.RedisRepository
-	BloomFilter *bloom.BloomFilter
+	bloomFilter *bloom.BloomFilter
 }
 
-func NewPisecUrlFilter() *PisecUrlFilter {
-	return &PisecUrlFilter{}
-}
-
-func CheckUrl(client brainclient.BrainClient, url string) (bool, error) {
-	return client.CheckUrl(url)
+func NewPisecUrlFilter(c brainclient.BrainClient, r *cache.RedisRepository) *PisecUrlFilter {
+	f := &PisecUrlFilter{
+		Client:      c,
+		Repo:        r,
+		bloomFilter: c.DownloadBloomFilter(),
+	}
+	return f
 }
 
 /*
@@ -38,7 +39,7 @@ func (psFilter *PisecUrlFilter) ShallYouPass(url string) (bool, error) {
 	fmt.Println(url)
 	cleanUrl := strings.Split(url, ":")[0]
 
-	if !psFilter.BloomFilter.TestString(cleanUrl) {
+	if !psFilter.bloomFilter.TestString(cleanUrl) {
 		return true, nil //URL is NOT present, for sure
 	}
 
@@ -65,6 +66,7 @@ func (psFilter *PisecUrlFilter) ShallYouPass(url string) (bool, error) {
 	} else { //err != nil
 		return false, err
 	}
-	return CheckUrl(psFilter.Client, url)
+
+	return psFilter.Client.CheckUrl(url)
 
 }
