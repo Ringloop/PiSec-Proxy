@@ -9,6 +9,10 @@ import (
 	"github.com/bits-and-blooms/bloom/v3"
 )
 
+type UrlFilter interface {
+	CheckUrlInBloom(url string) bool
+}
+
 type PisecUrlFilter struct {
 	Client      brainclient.BrainClient
 	Repo        cache.RepoClient
@@ -22,6 +26,10 @@ func NewPisecUrlFilter(c brainclient.BrainClient, r cache.RepoClient) *PisecUrlF
 		bloomFilter: c.DownloadBloomFilter(),
 	}
 	return f
+}
+
+func (psFilter *PisecUrlFilter) CheckUrlInBloom(url string) bool {
+	return psFilter.bloomFilter.TestString(url)
 }
 
 /*
@@ -39,7 +47,7 @@ func (psFilter *PisecUrlFilter) ShallYouPass(url string) (bool, error) {
 	fmt.Println(url)
 	cleanUrl := strings.Split(url, ":")[0]
 
-	if !psFilter.bloomFilter.TestString(cleanUrl) {
+	if !psFilter.CheckUrlInBloom(cleanUrl) {
 		return true, nil //URL is NOT present, for sure
 	}
 
