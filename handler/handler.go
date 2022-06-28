@@ -9,7 +9,6 @@ import (
 	"github.com/Ringloop/pisec/brainclient"
 	"github.com/Ringloop/pisec/cache"
 	"github.com/Ringloop/pisec/filter"
-	"github.com/bits-and-blooms/bloom/v3"
 	"github.com/elazarl/goproxy"
 )
 
@@ -23,11 +22,7 @@ type Server struct {
 	DetailsEndpoint    string
 }
 
-func GetBloomFilter(client brainclient.BrainClient) *bloom.BloomFilter {
-	return client.DownloadBloomFilter()
-}
-
-func NewUrlHandler(repo *cache.RedisRepository, server *Server) *PisecHandler {
+func NewUrlHandler(repo cache.RepoClient, server *Server) *PisecHandler {
 
 	brainClient := brainclient.NewClient(server.BaseAddress, server.IndicatorsEndpoint, server.DetailsEndpoint)
 

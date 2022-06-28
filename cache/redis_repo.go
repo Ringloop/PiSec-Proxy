@@ -17,6 +17,12 @@ const FALSE_POSITIVE_KEY = PISEC_KEY + "FALSE_POSITIVE:"
 const DEFAULT_PORT = "6379"
 const TEST_PORT = "6378"
 
+type RepoClient interface {
+	IsAllow(url string) (bool, error)
+	IsDeny(url string) (bool, error)
+	IsFalsePositive(url string) (bool, error)
+}
+
 type RedisRepository struct {
 	client       *redis.Client
 	dataDuration int

@@ -11,11 +11,11 @@ import (
 
 type PisecUrlFilter struct {
 	Client      brainclient.BrainClient
-	Repo        *cache.RedisRepository
+	Repo        cache.RepoClient
 	bloomFilter *bloom.BloomFilter
 }
 
-func NewPisecUrlFilter(c brainclient.BrainClient, r *cache.RedisRepository) *PisecUrlFilter {
+func NewPisecUrlFilter(c brainclient.BrainClient, r cache.RepoClient) *PisecUrlFilter {
 	f := &PisecUrlFilter{
 		Client:      c,
 		Repo:        r,
