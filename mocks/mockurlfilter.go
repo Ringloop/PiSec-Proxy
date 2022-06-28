@@ -1,4 +1,4 @@
-package filter
+package mocks
 
 import (
 	"github.com/Ringloop/pisec/brainclient"

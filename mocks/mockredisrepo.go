@@ -1,4 +1,4 @@
-package filter
+package mocks
 
 type MockRedisRepo struct {
 	Allowed        map[string]string

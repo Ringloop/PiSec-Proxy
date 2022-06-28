@@ -3,13 +3,14 @@ package filter
 import (
 	"testing"
 
+	"github.com/Ringloop/pisec/mocks"
 	"github.com/stretchr/testify/require"
 )
 
 func TestUrlInBrainServer(t *testing.T) {
 	//given
-	mockClient := MockBrainClient{}
-	mockRepo := MockRedisRepo{}
+	mockClient := mocks.MockBrainClient{}
+	mockRepo := mocks.MockRedisRepo{}
 
 	phishUrl := "evil.com"
 
@@ -25,8 +26,8 @@ func TestUrlInBrainServer(t *testing.T) {
 
 func TestUrlNotInBloomFilter(t *testing.T) {
 	//given
-	mockClient := MockBrainClient{}
-	mockRepo := MockRedisRepo{}
+	mockClient := mocks.MockBrainClient{}
+	mockRepo := mocks.MockRedisRepo{}
 
 	filter := NewPisecUrlFilter(mockClient, mockRepo)
 
@@ -42,9 +43,9 @@ func TestUrlNotInBloomFilter(t *testing.T) {
 
 func TestUrlInCacheAllowed(t *testing.T) {
 	//given
-	mockClient := MockBrainClient{}
-	mockRepo := MockRedisRepo{}
-	mockFilter := MockUrlFilter{}
+	mockClient := mocks.MockBrainClient{}
+	mockRepo := mocks.MockRedisRepo{}
+	mockFilter := mocks.MockUrlFilter{}
 
 	phishUrl := "allowedUrl.com"
 
@@ -71,9 +72,9 @@ func TestUrlInCacheAllowed(t *testing.T) {
 
 func TestUrlInCacheDenied(t *testing.T) {
 	//given
-	mockClient := MockBrainClient{}
-	mockRepo := MockRedisRepo{}
-	mockFilter := MockUrlFilter{}
+	mockClient := mocks.MockBrainClient{}
+	mockRepo := mocks.MockRedisRepo{}
+	mockFilter := mocks.MockUrlFilter{}
 
 	phishUrl := "deniedUrl.com"
 
@@ -100,9 +101,9 @@ func TestUrlInCacheDenied(t *testing.T) {
 
 func TestUrlInCacheFalsePositive(t *testing.T) {
 	//given
-	mockClient := MockBrainClient{}
-	mockRepo := MockRedisRepo{}
-	mockFilter := MockUrlFilter{}
+	mockClient := mocks.MockBrainClient{}
+	mockRepo := mocks.MockRedisRepo{}
+	mockFilter := mocks.MockUrlFilter{}
 
 	phishUrl := "falsePositiveUrl.com"
 
