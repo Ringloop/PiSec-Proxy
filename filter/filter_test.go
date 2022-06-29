@@ -53,12 +53,12 @@ func TestUrlInCacheAllowed(t *testing.T) {
 		phishUrl: "true",
 	}
 
-	mockFilter.CheckInFilterFunc = func(string) bool {
+	mockFilter.CheckInBloomFilterFunc = func(string) bool {
 		return true
 	}
 
 	filter := NewPisecUrlFilter(mockClient, mockRepo)
-	filter.CheckInFilterFunc = func(string) bool {
+	filter.CheckInBloomFilterFunc = func(string) bool {
 		return true
 	}
 
@@ -82,12 +82,12 @@ func TestUrlInCacheDenied(t *testing.T) {
 		phishUrl: "true",
 	}
 
-	mockFilter.CheckInFilterFunc = func(string) bool {
+	mockFilter.CheckInBloomFilterFunc = func(string) bool {
 		return true
 	}
 
 	filter := NewPisecUrlFilter(mockClient, mockRepo)
-	filter.CheckInFilterFunc = func(string) bool {
+	filter.CheckInBloomFilterFunc = func(string) bool {
 		return true
 	}
 
@@ -111,12 +111,12 @@ func TestUrlInCacheFalsePositive(t *testing.T) {
 		phishUrl: "true",
 	}
 
-	mockFilter.CheckInFilterFunc = func(string) bool {
+	mockFilter.CheckInBloomFilterFunc = func(string) bool {
 		return true
 	}
 
 	filter := NewPisecUrlFilter(mockClient, mockRepo)
-	filter.CheckInFilterFunc = func(string) bool {
+	filter.CheckInBloomFilterFunc = func(string) bool {
 		return true
 	}
 

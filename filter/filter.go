@@ -14,10 +14,10 @@ type UrlFilter interface {
 }
 
 type PisecUrlFilter struct {
-	Client            brainclient.BrainClient
-	Repo              cache.RepoClient
-	CheckInFilterFunc func(url string) bool
-	bloomFilter       *bloom.BloomFilter
+	Client                 brainclient.BrainClient
+	Repo                   cache.RepoClient
+	CheckInBloomFilterFunc func(url string) bool
+	bloomFilter            *bloom.BloomFilter
 }
 
 func NewPisecUrlFilter(c brainclient.BrainClient, r cache.RepoClient) *PisecUrlFilter {
@@ -27,7 +27,7 @@ func NewPisecUrlFilter(c brainclient.BrainClient, r cache.RepoClient) *PisecUrlF
 		bloomFilter: c.DownloadBloomFilter(),
 	}
 
-	f.CheckInFilterFunc = func(url string) bool {
+	f.CheckInBloomFilterFunc = func(url string) bool {
 		return f.bloomFilter.TestString(url)
 	}
 
@@ -35,7 +35,7 @@ func NewPisecUrlFilter(c brainclient.BrainClient, r cache.RepoClient) *PisecUrlF
 }
 
 func (psFilter *PisecUrlFilter) CheckUrlInBloom(url string) bool {
-	return psFilter.CheckInFilterFunc(url)
+	return psFilter.CheckInBloomFilterFunc(url)
 }
 
 /*

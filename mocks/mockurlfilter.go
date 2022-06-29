@@ -1,10 +1,10 @@
 package mocks
 
 type MockUrlFilter struct {
-	CheckInFilterFunc func(url string) bool
+	CheckInBloomFilterFunc func(url string) bool
 }
 
 // CheckUrlInBloom is the mock client's `CheckUrlInBloom` func
 func (m *MockUrlFilter) CheckUrlInBloom(url string) bool {
-	return m.CheckInFilterFunc(url)
+	return m.CheckInBloomFilterFunc(url)
 }
