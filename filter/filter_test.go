@@ -53,8 +53,8 @@ func TestUrlInCacheAllowed(t *testing.T) {
 
 	phishUrl := "allowedUrl.com"
 
-	mockRepo.Allowed = map[string]string{
-		phishUrl: "true",
+	mockRepo.Allowed = map[string]struct{}{
+		phishUrl: {},
 	}
 
 	mockFilter.CheckInBloomFilterFunc = func(string) bool {
@@ -82,8 +82,8 @@ func TestUrlInCacheDenied(t *testing.T) {
 
 	phishUrl := "deniedUrl.com"
 
-	mockRepo.Denied = map[string]string{
-		phishUrl: "true",
+	mockRepo.Denied = map[string]struct{}{
+		phishUrl: {},
 	}
 
 	mockFilter.CheckInBloomFilterFunc = func(string) bool {
@@ -111,8 +111,8 @@ func TestUrlInCacheFalsePositive(t *testing.T) {
 
 	phishUrl := "falsePositiveUrl.com"
 
-	mockRepo.FalsePositives = map[string]string{
-		phishUrl: "true",
+	mockRepo.FalsePositives = map[string]struct{}{
+		phishUrl: {},
 	}
 
 	mockFilter.CheckInBloomFilterFunc = func(string) bool {

@@ -1,9 +1,9 @@
 package mocks
 
 type MockRedisRepo struct {
-	Allowed        map[string]string
-	Denied         map[string]string
-	FalsePositives map[string]string
+	Allowed        map[string]struct{}
+	Denied         map[string]struct{}
+	FalsePositives map[string]struct{}
 }
 
 func (r MockRedisRepo) IsAllow(url string) (bool, error) {
