@@ -3,14 +3,12 @@ package mocks
 import "github.com/bits-and-blooms/bloom/v3"
 
 type MockBrainClient struct {
+	ListedUrls map[string]struct{}
 }
 
 func (f MockBrainClient) CheckUrl(url string) (bool, error) {
-	if url == "evil.com" {
-		return true, nil
-	}
-
-	return false, nil
+	_, isUrlListed := f.ListedUrls[url]
+	return isUrlListed, nil
 }
 
 func (f MockBrainClient) DownloadBloomFilter() *bloom.BloomFilter {

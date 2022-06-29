@@ -9,12 +9,16 @@ import (
 
 func TestUrlInBrainServer(t *testing.T) {
 	//given
-	mockClient := mocks.MockBrainClient{}
+	mockBrainClient := mocks.MockBrainClient{}
 	mockRepo := mocks.MockRedisRepo{}
 
 	phishUrl := "evil.com"
 
-	filter := NewPisecUrlFilter(mockClient, mockRepo)
+	mockBrainClient.ListedUrls = map[string]struct{}{
+		phishUrl: {},
+	}
+
+	filter := NewPisecUrlFilter(mockBrainClient, mockRepo)
 
 	//when
 	res, err := filter.ShallYouPass(phishUrl)
