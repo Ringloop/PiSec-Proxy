@@ -10,7 +10,7 @@ So, the hero we needed to inspire to is no one less than the mighty *Gandalf*.
   <img src="https://user-images.githubusercontent.com/4531376/189697521-43557602-5a73-48dd-8a74-4a8c4daeda0f.png">
 </p>
 
->>thanks to Anja van Hagen for creating this beautiful image, you can check it out at: https://codepen.io/anjanas_dh/pen/ZMqKwb
+>thanks to Anja van Hagen for creating this beautiful image, you can check it out at: https://codepen.io/anjanas_dh/pen/ZMqKwb
 
 So as he defeated the Balrog in the underground realm of Moria, the Proxy will provide protection checking 
 
