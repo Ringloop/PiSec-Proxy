@@ -1,6 +1,4 @@
-# PiSec-Proxy
-
-##The local network proxy of the PiSec project (https://github.com/ringloop/pisec) 
+# PiSec-Proxy - The local network proxy of the PiSec project (https://github.com/ringloop/pisec) 
 
 Our aim in implementing the Proxy, and the whole PiSec project, was to protect our local network from malware, and data integrity.
 
